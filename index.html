@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Zonas inundables en la provincia de Málaga de probabilidad excepcional (retorno de 500 años)</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <!-- Script y estilos de MapLibre-->
+    <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- Estilos básicos de la página-->
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; } 
+        
+          /* Titulito de los tooltips */
+        h3 {
+            line-height: 1.2em;
+            font-size: 1.4em;
+            margin: 0px 0px 4px 0px;
+        }
+        /* Texto normal de los tooltips */
+        p {
+            line-height: 1.2em;
+            margin: 6px 0px 6px 0px;
+        }
+        /* Texto normal de la leyenda */
+        div p {
+            color: black;
+            font-size: 14px;
+            line-height: 1.2em;
+            color: #ffffff;
+        }
+
+        div span {
+    color: white;
+    font-size: 14px;
+    line-height: 1.2em;
+    color: rgba(255, 255, 255, 1);
+}
+
+        /* Tooltips en negro */
+        .maplibregl-popup-content {
+            width: 170px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Cambiar el triangulito del tooltip también */
+        .maplibregl-popup-anchor-top .mapboxgl-popup-tip,
+        .maplibrgle-popup-anchor-top-left .mapboxgl-popup-tip,
+        .maplibregl-popup-anchor-top-right .mapboxgl-popup-tip {
+            border-bottom-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+        .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+        .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+            border-top-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+            border-right-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+            border-left-color: rgba(0, 0, 0, 0.7);
+        }
+
+
+        /* Estilos propios de la caja de la leyenda */
+        .map-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  margin-right: 20px;
+  font-family: Arial, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+        /* Estilos propios del contenido de la leyenda */
+        #legend {
+  padding: 10px;
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
+  line-height: 22px;
+  height: 48px;
+  margin-top: 5px;
+  margin-left: 5px;
+  width: 280px;
+  overflow: hidden;
+}
+
+.legend-key {
+  display: inline-block;
+  border-radius: 0%;
+  width: 20px;
+  height: 2px;
+  margin-right: 10px;
+  vertical-align: 3px;
+}
+
+    </style>
+
+</head>
+<body>
+    <!-- Carga del geocoder de MapLibre -->
+    <script src="https://unpkg.com/@maplibre/maplibre-gl-geocoder@1.5.0/dist/maplibre-gl-geocoder.min.js"></script>
+    <link
+    rel="stylesheet"
+    href="https://unpkg.com/@maplibre/maplibre-gl-geocoder@1.5.0/dist/maplibre-gl-geocoder.css"
+    />
+
+    <!-- Contenedor del mapa-->
+    <div id='map'></div>
+    <div class='map-overlay' id='legend'></div>
+
+    <!-- Java Script de MapLibre-->
+    <script>
+        const map = new maplibregl.Map({
+          style: 'https://raw.githubusercontent.com/encarnihinojosa/mapstyles/refs/heads/main/positron_dark.json',
+          center: [-4.7, 36.72],
+          zoom: 7.5,
+          container: 'map',
+          attributionControl: false
+        });
+    
+map.on('load', () => {
+
+map.addSource('barrios', {
+// es de tipo geojson
+'type': 'geojson',
+// url del recurso (url desde Github)
+'data': 'https://raw.githubusercontent.com/encarnihinojosa/mapasSUR/refs/heads/main/Zonas_inundables_500_malaga_reducido.json'
+});
+ 
+// añade una nueva capa de pintado de mapa
+map.addLayer({
+// nombre de esta nueva capa (nombrar a nuestro gusto)
+'id': 'barrios-layer',
+// tipo, relleno
+'type': 'fill',
+// fíjate en el recurso añadido anteriormente para saber cómo pintar
+'source': 'barrios',
+'paint': {
+// rellena de color transparente
+'fill-color': 'rgba(82, 238, 255, 0.6)',
+// y añade un trazo (si es que se quiere, si no, el cuarto valor sería 0)
+'fill-outline-color': 'rgba(255, 255, 255, 0)'
+}
+});
+
+map.addSource('tasa', {
+// es de tipo geojson
+'type': 'geojson',
+// url del recurso (url desde Github)
+'data': 'https://raw.githubusercontent.com/encarnihinojosa/seguros_inundaciones/refs/heads/main/seguros_inunda_top20_tasa.json'
+});
+ 
+// añade una nueva capa de pintado de mapa
+map.addLayer({
+// nombre de esta nueva capa (nombrar a nuestro gusto)
+'id': 'tasa-layer',
+// tipo, relleno
+'type': 'line',
+// fíjate en el recurso añadido anteriormente para saber cómo pintar
+'source': 'tasa',
+'paint': {
+// y añade un trazo (si es que se quiere, si no, el cuarto valor sería 0)
+'line-color': 'rgba(255, 255, 255, 1)',
+'line-width': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        10, 1,  // Al zoom 10, el grosor es 2px
+        15, 4   // Al zoom 15, el grosor sube a 8px
+    ]
+}
+});
+map.addLayer({
+// nombre de esta nueva capa (nombrar a nuestro gusto)
+'id': 'tasainfo-layer',
+// tipo, relleno
+'type': 'fill',
+// fíjate en el recurso añadido anteriormente para saber cómo pintar
+'source': 'tasa',
+'paint': {
+// y añade un trazo (si es que se quiere, si no, el cuarto valor sería 0)
+'fill-color': 'rgba(82, 238, 255, 1)',
+'fill-opacity': 0.01
+}
+});
+
+
+});
+
+let popup; // Variable para almacenar la referencia al popup
+
+map.on('mousemove', 'tasainfo-layer', (e) => {
+    // Crea un nuevo popup si no existe
+    if (!popup) {
+        popup = new maplibregl.Popup({ 
+            offset: [0, -20],
+            closeButton: false,
+            closeOnClick: false
+        });
+    }
+   
+    // Configura y muestra el popup
+    popup
+        .setLngLat(e.lngLat)
+        .setHTML(
+            // edición del contenido del tooltip
+// <h3> es el titulillo
+    '<p><b>' +
+// aquí, barrio es el nombre de la columna del dataset
+e.features[0].properties.mun +
+// <p> es el texto normal
+'</b></p><p>Tasa de siniestralidad: <b>' +
+// aquí, cifra es el nombre de la columna del dataset
+e.features[0].properties.tasatxt +
+'<b>'
+        )
+        .addTo(map);
+        map.getCanvas().style.cursor = 'pointer';
+    
+});
+
+
+
+// Cambiar el cursor a normal y eliminar el popup cuando el mouse sale del polígono
+map.on('mouseleave', 'tasainfo-layer', () => {
+    map.getCanvas().style.cursor = '';
+    if (popup) {
+        popup.remove(); // Elimina el popup del mapa
+        popup = null;   // Restablece la referencia
+    }
+});
+
+
+
+
+    
+
+        
+    
+        // Geocoder MapLibre
+        const geocoderApi = {
+        forwardGeocode: async (config) => {
+            const features = [];
+            try {
+                const bbox = [-5.5, 36.04, -3.77, 37.30];
+                const request =
+            `https://nominatim.openstreetmap.org/search?q=${
+                config.query
+            }&format=geojson&polygon_geojson=1&addressdetails=1&viewbox=${
+                    bbox[0]
+                },${bbox[1]},${bbox[2]},${bbox[3]}&bounded=1`;
+                const response = await fetch(request);
+                const geojson = await response.json();
+                for (const feature of geojson.features) {
+                    const center = [
+                        feature.bbox[0] +
+                    (feature.bbox[2] - feature.bbox[0]) / 2,
+                        feature.bbox[1] +
+                    (feature.bbox[3] - feature.bbox[1]) / 2
+                    ];
+                    const point = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: center
+                        },
+                        place_name: feature.properties.display_name,
+                        properties: feature.properties,
+                        text: feature.properties.display_name,
+                        place_type: ['place'],
+                        center
+                    };
+                    features.push(point);
+                }
+            } catch (e) {
+                console.error(`Failed to forwardGeocode with error: ${e}`);
+            }
+
+            return {
+                features
+            };
+        }
+    };
+
+    map.on('load', function() {
+/* 
+Entre las comillas simples pondremos los nombres de los items.
+En el último item podemos añadir con HTML otros textos aclaratorios en la leyenda.
+*/
+    var layers = ['20 municipios con mayor tasa','Zonas inundables (probabilidad baja)'];
+/* 
+Entre las comillas simples pondremos los colores de los círculos o cuadrados de los items.
+Deberán ir tantos colores como items hemos indicado en layers.
+*/
+    var colors = ['#ffffff', 'rgba(82, 238, 255, 0.8)'];
+    for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+        key.className = 'legend-key';
+        key.style.backgroundColor = color;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+}
+});
+
+
+
+
+    
+    </script>
+</body>
+</html>
